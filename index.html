@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8" content="text/html" http-equiv="Content-Type" /><meta content="Core functionality of Leiningen as a library." name="description" /><style type="text/css">/**
+<html><head><meta charset="utf-8" content="text/html" http-equiv="Content-Type" /><meta content="Library for core functionality of Leiningen." name="description" /><style type="text/css">/**
  * SyntaxHighlighter
  * http://alexgorbatchev.com/SyntaxHighlighter
  *
@@ -3122,8 +3122,8 @@ $(document).ready(function() {
     ul.css('margin-top', '0px')
 
 })
-</script><title>leiningen-core -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">leiningen-core</h1><h2 class="project-version">2.0.0-SNAPSHOT</h2><br /><p>Core functionality of Leiningen as a library.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">classlojure</td><td class="dotted"><hr /></td><td class="dep-version">0.6.5</td></tr><tr><td class="dep-name">robert/hooke</td><td class="dotted"><hr /></td><td class="dep-version">1.1.2</td></tr><tr><td class="dep-name">com.cemerick/pomegranate</td><td class="dotted"><hr /></td><td class="dep-version">0.0.1</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#leiningen.core.classpath">leiningen.core.classpath</a></li><li><a href="#leiningen.core.eval">leiningen.core.eval</a></li><li><a href="#leiningen.core.ns">leiningen.core.ns</a></li><li><a href="#leiningen.core.project">leiningen.core.project</a></li><li><a href="#leiningen.core.user">leiningen.core.user</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.core.classpath" name="leiningen.core.classpath"><h1 class="project-name">leiningen.core.classpath</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Calculate project classpaths by resolving dependencies via Aether.</p>
+</script><title>leiningen-core -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">leiningen-core</h1><h2 class="project-version">2.0.0-SNAPSHOT</h2><br /><p>Library for core functionality of Leiningen.</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">classlojure</td><td class="dotted"><hr /></td><td class="dep-version">0.6.5</td></tr><tr><td class="dep-name">robert/hooke</td><td class="dotted"><hr /></td><td class="dep-version">1.1.2</td></tr><tr><td class="dep-name">com.cemerick/pomegranate</td><td class="dotted"><hr /></td><td class="dep-version">0.0.1</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#leiningen.core.classpath">leiningen.core.classpath</a></li><li><a href="#leiningen.core.eval">leiningen.core.eval</a></li><li><a href="#leiningen.core.main">leiningen.core.main</a></li><li><a href="#leiningen.core.ns">leiningen.core.ns</a></li><li><a href="#leiningen.core.project">leiningen.core.project</a></li><li><a href="#leiningen.core.user">leiningen.core.user</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.core.classpath" name="leiningen.core.classpath"><h1 class="project-name">leiningen.core.classpath</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Calculate project classpaths by resolving dependencies via Aether.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns leiningen.core.classpath
   (:require [cemerick.pomegranate.aether :as aether]
             [clojure.java.io :as io]
@@ -3188,7 +3188,7 @@ TODO: ensure repositories is ordered</p>
   [m k]
   (m (first (drop-while #(nil? (re-find (re-pattern %) k))
                         (keys m)))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def ^{:private true} native-names
+</td><td class="codes"><pre class="brush: clojure">(def ^:private native-names
   {&quot;Mac OS X&quot; :macosx &quot;Windows&quot; :windows &quot;Linux&quot; :linux
    &quot;FreeBSD&quot; :freebsd &quot;OpenBSD&quot; :openbsd
    &quot;amd64&quot; :x86_64 &quot;x86_64&quot; :x86_64 &quot;x86&quot; :x86 &quot;i386&quot; :x86
@@ -3323,7 +3323,93 @@ the whole leiningen-core separation.</p>
                    (set! ~'*warn-on-reflection*
                          ~(:warn-on-reflection project))
                    ~form)))
-  ([project form] (eval-in-project project form nil)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.core.ns" name="leiningen.core.ns"><h1 class="project-name">leiningen.core.ns</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Inspired by clojure.contrib.find-namespaces, but trimmed down to
+  ([project form] (eval-in-project project form nil)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.core.main" name="leiningen.core.main"><h1 class="project-name">leiningen.core.main</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>(:require [leiningen.core.user :as user] [leiningen.core.project :as project] [clojure.java.io :as io] [clojure.string :as string])</p>
+</td><td class="codes"><pre class="brush: clojure">(ns leiningen.core.main
+  (:require [leiningen.core.user :as user]
+            [leiningen.core.project :as project]
+            [clojure.java.io :as io]
+            [clojure.string :as string]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def aliases (atom {&quot;--help&quot; &quot;help&quot;, &quot;-h&quot; &quot;help&quot;, &quot;-?&quot; &quot;help&quot;, &quot;-v&quot; &quot;version&quot;
+                    &quot;--version&quot; &quot;version&quot;, &quot;überjar&quot; &quot;uberjar&quot;
+                    &quot;cp&quot; &quot;classpath&quot; &quot;halp&quot; &quot;help&quot;}))</pre></td></tr><tr><td class="docs"><p>Call System/exit. Defined as a function so that rebinding is possible.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn exit
+  ([code]
+     (shutdown-agents)
+     (System/exit code))
+  ([] (exit 0)))</pre></td></tr><tr><td class="docs"><p>Print msg to standard err and exit with a value of 1.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn abort
+  [&amp; msg]
+  (binding [*out* *err*]
+    (apply println msg)
+    (exit 1)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn task-not-found [&amp; _]
+  (abort &quot;That's not a task. Use \&quot;lein help\&quot; to list all tasks.&quot;))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn resolve-task
+  ([task not-found]
+     (let [task-ns (symbol (str &quot;leiningen.&quot; task))]
+       (try
+         (when-not (find-ns task-ns)
+           (require task-ns))
+         (or (ns-resolve task-ns (symbol task))
+             not-found)
+         (catch java.io.FileNotFoundException e
+           not-found))))
+  ([task] (resolve-task task #'task-not-found)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ^:internal matching-arity? [task args]
+  (some (fn [parameters]
+          (and (if (= '&amp; (last (butlast parameters)))
+                 (&gt;= (count args) (- (count parameters) 3))
+                 (= (count parameters) (inc (count args))))
+               parameters))
+        (:arglists (meta task))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn apply-task [task-name project args]
+  (let [task (resolve-task task-name)]
+    (when-not (or project (:no-project-needed (meta task)))
+      (abort &quot;Couldn't find project.clj, which is needed for&quot; task-name))
+    (when-not (matching-arity? task args)
+      (abort &quot;Wrong number of arguments to&quot; task-name &quot;task.&quot;
+             &quot;\nExpected&quot; (rest (:arglists (meta task)))))
+    (apply task project args)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ^:internal version-satisfies? [v1 v2]
+  (let [v1 (map #(Integer. %) (re-seq #&quot;\d&quot; (first (string/split v1 #&quot;-&quot; 2))))
+        v2 (map #(Integer. %) (re-seq #&quot;\d&quot; (first (string/split v2 #&quot;-&quot; 2))))]
+    (loop [versions (map vector v1 v2)
+           [seg1 seg2] (first versions)]
+      (cond (empty? versions) true
+            (= seg1 seg2) (recur (rest versions) (first (rest versions)))
+            (&gt; seg1 seg2) true
+            (&lt; seg1 seg2) false))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:private min-version-warning
+  &quot;*** Warning: This project requires Leiningen %s, but you have %s ***
+Get the latest verison of Leiningen at https://github.com/technomancy/leiningen
+or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- verify-min-version
+  [{:keys [min-lein-version]}]
+  (when-not (version-satisfies? (System/getenv &quot;LEIN_VERSION&quot;) min-lein-version)
+    (println (format min-version-warning
+                     min-lein-version (System/getenv &quot;LEIN_VERSION&quot;)))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- conj-to-last [coll x]
+  (update-in coll [(dec (count coll))] conj x))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ^:internal group-args
+  ([args] (reduce group-args [[]] args))
+  ([groups arg]
+     (if (.endsWith arg &quot;,&quot;)
+       (-&gt; groups
+           (conj-to-last (subs arg 0 (dec (count arg))))
+           (conj []))
+       (conj-to-last groups arg))))</pre></td></tr><tr><td class="docs"><p>Run a task or comma-separated list of tasks.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn -main
+  [&amp; args]
+  (user/init)
+  (let [project (if (.exists (io/file &quot;project.clj&quot;)) (project/read))]
+    (when (:min-lein-version project)
+      (verify-min-version project))
+    (doseq [[task-name &amp; args] (group-args args)
+            :let [task-name (or (@aliases task-name) task-name &quot;help&quot;)
+                  result (apply-task task-name project args)]]
+      (when (and (integer? result) (pos? result))
+        (exit result))))
+  (exit 0))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.core.ns" name="leiningen.core.ns"><h1 class="project-name">leiningen.core.ns</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Inspired by clojure.contrib.find-namespaces, but trimmed down to
   just what Leiningen needs.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns leiningen.core.ns
   (:require [clojure.java.io :as io]
@@ -3557,13 +3643,9 @@ declaration.</p>
   []
   (if-let [settings-var (resolve 'user/settings)]
     @settings-var
-    {}))</pre></td></tr><tr><td class="docs"><p>Return a list of paths to all plugins the user has installed.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn plugins
-  []
-  (for [plugin (.listFiles (io/file (leiningen-home) &quot;plugins&quot;))]
-    (.getAbsolutePath plugin)))</pre></td></tr><tr><td class="docs">
+    {}))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn profiles []
   (let [profiles-file (io/file (leiningen-home) &quot;profiles.clj&quot;)]
     (if (.exists profiles-file)
-      (read-string (slurp profiles-file)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_leiningen.core.classpath">leiningen.core.classpath</li><li class="floating-toc-li" id="floating-toc_leiningen.core.eval">leiningen.core.eval</li><li class="floating-toc-li" id="floating-toc_leiningen.core.ns">leiningen.core.ns</li><li class="floating-toc-li" id="floating-toc_leiningen.core.project">leiningen.core.project</li><li class="floating-toc-li" id="floating-toc_leiningen.core.user">leiningen.core.user</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+      (read-string (slurp profiles-file)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_leiningen.core.classpath">leiningen.core.classpath</li><li class="floating-toc-li" id="floating-toc_leiningen.core.eval">leiningen.core.eval</li><li class="floating-toc-li" id="floating-toc_leiningen.core.main">leiningen.core.main</li><li class="floating-toc-li" id="floating-toc_leiningen.core.ns">leiningen.core.ns</li><li class="floating-toc-li" id="floating-toc_leiningen.core.project">leiningen.core.project</li><li class="floating-toc-li" id="floating-toc_leiningen.core.user">leiningen.core.user</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
