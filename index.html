@@ -3029,14 +3029,15 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>leiningen-core -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">leiningen-core</h1><h2 class="project-version">2.0.0-SNAPSHOT</h2><br /><p>Library for core functionality of Leiningen.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">classlojure</td><td class="dotted"><hr /></td><td class="dep-version">0.6.5</td></tr><tr><td class="dep-name">robert/hooke</td><td class="dotted"><hr /></td><td class="dep-version">1.1.2</td></tr><tr><td class="dep-name">ordered</td><td class="dotted"><hr /></td><td class="dep-version">1.1.0</td></tr><tr><td class="dep-name">com.cemerick/pomegranate</td><td class="dotted"><hr /></td><td class="dep-version">0.0.9</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#leiningen.core.classpath">leiningen.core.classpath</a></li><li><a href="#leiningen.core.eval">leiningen.core.eval</a></li><li><a href="#leiningen.core.main">leiningen.core.main</a></li><li><a href="#leiningen.core.project">leiningen.core.project</a></li><li><a href="#leiningen.core.user">leiningen.core.user</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.core.classpath" name="leiningen.core.classpath"><h1 class="project-name">leiningen.core.classpath</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Calculate project classpaths by resolving dependencies via Aether.</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.4.0</td></tr><tr><td class="dep-name">classlojure</td><td class="dotted"><hr /></td><td class="dep-version">0.6.5</td></tr><tr><td class="dep-name">robert/hooke</td><td class="dotted"><hr /></td><td class="dep-version">1.1.2</td></tr><tr><td class="dep-name">ordered</td><td class="dotted"><hr /></td><td class="dep-version">1.1.0</td></tr><tr><td class="dep-name">com.cemerick/pomegranate</td><td class="dotted"><hr /></td><td class="dep-version">0.0.11</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#leiningen.core.classpath">leiningen.core.classpath</a></li><li><a href="#leiningen.core.eval">leiningen.core.eval</a></li><li><a href="#leiningen.core.main">leiningen.core.main</a></li><li><a href="#leiningen.core.project">leiningen.core.project</a></li><li><a href="#leiningen.core.user">leiningen.core.user</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.core.classpath" name="leiningen.core.classpath"><h1 class="project-name">leiningen.core.classpath</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Calculate project classpaths by resolving dependencies via Aether.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns leiningen.core.classpath
   (:require [cemerick.pomegranate.aether :as aether]
             [cemerick.pomegranate :as pomegranate]
             [clojure.java.io :as io]
             [leiningen.core.user :as user])
   (:import (java.util.jar JarFile)
-           (java.util.regex Pattern)))</pre></td></tr><tr><td class="docs"><p>Basically just for re-throwing a more comprehensible error.</p>
+           (java.util.regex Pattern)
+           (java.net URL)))</pre></td></tr><tr><td class="docs"><p>Basically just for re-throwing a more comprehensible error.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- read-dependency-project [root dep]
   (let [project-file (io/file root &quot;checkouts&quot; dep &quot;project.clj&quot;)]
     (if (.exists project-file)
@@ -3067,23 +3068,28 @@ net.brehaut.ClojureTools = (function (SH) {
   (doseq [jar (map #(JarFile. %) deps)
           entry (enumeration-seq (.entries jar))
           :when (.startsWith (.getName entry) &quot;native/&quot;)]
-    (let [f (io/file native-path (subs (.getName entry)
-                                       (count &quot;native/&quot;)))]
+    (let [f (io/file native-path (subs (.getName entry) (count &quot;native/&quot;)))]
       (if (.isDirectory entry)
         (.mkdirs f)
-        (io/copy (.getInputStream jar entry) f)))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn add-repo-auth [[id {:keys [url] :as repo}]]
-  &quot;Repository credentials (a map containing some of
+        (io/copy (.getInputStream jar entry) f)))))</pre></td></tr><tr><td class="docs"><p>Repository credentials (a map containing some of
    #{:username :password :passphrase :private-key-file}) are discovered
-   from:
-   1. Looking up the repository URL in the [:auth :repository-auth]
-      map
-   2. Scanning that map for regular expression keys that match the
-      repository URL.
-   So, a :repository-auth map that contains an entry:
-     {#\&quot;http://maven.company.com/.*\&quot; {:username \&quot;abc\&quot; :password \&quot;xyz\&quot;}}
-   would be applied to all repositories with URLs matching the regex key
-   that didn't have an explicit entry.&quot;
+   from:</p>
+
+<ol>
+<li>Looking up the repository URL in the [:auth :repository-auth]
+  map</li>
+<li><p>Scanning that map for regular expression keys that match the
+  repository URL.</p>
+
+<p>So, a :repository-auth map that contains an entry:</p>
+
+<p> {#"http://maven.company.com/.*" {:username "abc" :password "xyz"}}</p>
+
+<p>would be applied to all repositories with URLs matching the regex key
+that didn't have an explicit entry.</p></li>
+</ol>
+</td><td class="codes"><pre class="brush: clojure">(defn add-repo-auth
+  [[id {:keys [url] :as repo}]]
   (let [repo-creds (-&gt; (user/profiles) :auth :repository-auth)]
     (if-let [match (get repo-creds url)]
       [id (merge repo match)]
@@ -3092,27 +3098,55 @@ net.brehaut.ClojureTools = (function (SH) {
                                               (re-matches re? url))]
                                cred)))])))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn add-auth [repositories]
-  (map add-repo-auth repositories))</pre></td></tr><tr><td class="docs"><p>Simply delegate regular dependencies to pomegranate. This will
+  (map add-repo-auth repositories))</pre></td></tr><tr><td class="docs"><p>Returns a map of the JVM proxy settings</p>
+</td><td class="codes"><pre class="brush: clojure">(defn get-proxy-settings
+  []
+  (when-let [proxy (System/getenv &quot;http_proxy&quot;)]
+    (let [url (URL. proxy)
+          user-info (.getUserInfo url)
+          [username password] (and user-info (.split user-info &quot;:&quot;))]
+      {:host (.getHost url)
+       :port (.getPort url)
+       :username username
+       :password password})))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- root-cause [e]
+  (last (take-while identity (iterate (memfn getCause) e))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- get-dependencies
+  [dependencies-key {:keys [repositories local-repo offline?] :as project}
+   &amp; {:keys [add-classpath?]}]
+  {:pre [(every? vector? (project dependencies-key))]}
+  (try
+    ((if add-classpath?
+       pomegranate/add-dependencies
+       aether/resolve-dependencies)
+     :local-repo local-repo
+     :offline? offline?
+     :repositories (add-auth repositories)
+     :coordinates (project dependencies-key)
+     :transfer-listener :stdout
+     :proxy (get-proxy-settings))
+    (catch Exception e
+      (if (and (instance? java.net.UnknownHostException (root-cause e))
+               (not offline?))
+        (get-dependencies dependencies-key (assoc project :offline? true))
+        (throw e)))))</pre></td></tr><tr><td class="docs"><p>Simply delegate regular dependencies to pomegranate. This will
   ensure they are downloaded into ~/.m2/repositories and that native
-  deps have been extracted to :native-path.  If :add-classpath? is
+  deps have been extracted to :native-path. If :add-classpath? is
   logically true, will add the resolved dependencies to Leiningen's
   classpath.</p>
 
 <p>   Returns a set of the dependencies' files.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn resolve-dependencies
-  [dependencies-key {:keys [repositories native-path] :as project}
-   &amp; {:keys [add-classpath?]}]
-  {:pre [(every? vector? (project dependencies-key))]}
-  (doto (set (aether/dependency-files
-              ((if add-classpath?
-                 pomegranate/add-dependencies
-                 aether/resolve-dependencies)
-               :local-repo (:local-repo project)
-               :offline? (:offline project)
-               :repositories (add-auth repositories)
-               :coordinates (project dependencies-key)
-               :transfer-listener :stdout)))
-    (extract-native-deps native-path)))</pre></td></tr><tr><td class="docs">
+  [dependencies-key {:keys [repositories native-path] :as project} &amp; rest]
+  (doto (-&gt;&gt; (apply get-dependencies dependencies-key project rest)
+             (aether/dependency-files)
+             (filter #(re-find #&quot;\.(jar|zip)$&quot; (.getName %))))
+    (extract-native-deps native-path)))</pre></td></tr><tr><td class="docs"><p>Returns a graph of the project's dependencies.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn dependency-hierarchy
+  [dependencies-key project]
+  (aether/dependency-hierarchy
+   (project dependencies-key)
+   (get-dependencies dependencies-key project)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- normalize-path [root path]
   (let [f (io/file path)]
     (.getAbsolutePath (if (.isAbsolute f) f (io/file root path)))))</pre></td></tr><tr><td class="docs"><p>Return a the classpath for project as a list of strings.</p>
@@ -3169,15 +3203,14 @@ net.brehaut.ClojureTools = (function (SH) {
   [project]
   (if-not (:disable-injection project)
     (conj (:injections project) hooke-injection)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def ^:dynamic *prepping?* false)</pre></td></tr><tr><td class="docs"><p>TODO: tasks which are in :prep-tasks should dissoc themselves
-before calling eval-in-project!</p>
 </td><td class="codes"><pre class="brush: clojure">(defn prep [project]
   ;; This must exist before the project is launched.
   (.mkdirs (io/file (:compile-path project &quot;/tmp&quot;)))
-  (when-not *prepping?*
-    (binding [*prepping?* true]
-      (doseq [task (:prep-tasks project)]
-        (main/apply-task task project [])))))</pre></td></tr><tr><td class="docs"><h1>Subprocess stuff</h1>
+  (classpath/get-classpath project)
+  (doseq [task (:prep-tasks project)]
+    (main/apply-task task (dissoc project :prep-tasks) []))
+  (when-let [prepped (:prepped (meta project))]
+    (deliver prepped true)))</pre></td></tr><tr><td class="docs"><h1>Subprocess stuff</h1>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Path to the os/arch-specific directory containing native libs.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn native-arch-path
   [project]
@@ -3213,6 +3246,8 @@ before calling eval-in-project!</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sh
   [&amp; cmd]
   (let [proc (.exec (Runtime/getRuntime) (into-array cmd) nil (io/file *dir*))]
+    (.addShutdownHook (Runtime/getRuntime)
+                      (Thread. (fn [] (.destroy proc))))
     (with-open [out (io/reader (.getInputStream proc))
                 err (io/reader (.getErrorStream proc))]
       (let [pump-out (doto (Thread. #(pump out *out*)) .start)
@@ -3228,7 +3263,7 @@ for some of the landmines involved in doing it properly</p>
     (pr-str (pr-str form))
     (pr-str form)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn shell-command [project form]
-  `(~(or (System/getenv &quot;JAVA_CMD&quot;) &quot;java&quot;)
+  `(~(or (:java-cmd project) (System/getenv &quot;JAVA_CMD&quot;) &quot;java&quot;)
     &quot;-cp&quot; ~(string/join java.io.File/pathSeparatorChar
                         (classpath/get-classpath project))
     ~@(get-jvm-args project)
@@ -3237,9 +3272,12 @@ for some of the landmines involved in doing it properly</p>
   (fn [project _] (:eval-in project)) :default :subprocess)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod eval-in :subprocess [project form]
   (binding [*dir* (:root project)]
-    (apply sh (shell-command project form))))</pre></td></tr><tr><td class="docs">
+    (let [exit-code (apply sh (shell-command project form))]
+      (when (pos? exit-code)
+        (throw (Exception. (str &quot;Process exited with &quot; exit-code)))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod eval-in :trampoline [project form]
-  (deliver (:trampoline-promise project) (shell-command project form)))</pre></td></tr><tr><td class="docs">
+  (deliver (:trampoline-promise (meta project))
+           (shell-command project form)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod eval-in :classloader [project form]
   (let [classpath   (map io/file (classpath/get-classpath project))
         classloader (cl/classlojure classpath)]
@@ -3260,6 +3298,10 @@ for some of the landmines involved in doing it properly</p>
   (project/load-plugins project :dependencies)
   (doseq [path (classpath/get-classpath project)]
     (pomegranate/add-classpath path))
+  (doseq [opt (get-jvm-args project)
+            :when (.startsWith opt &quot;-D&quot;)
+            :let [[_ k v] (re-find #&quot;^-D(.*?)=(.*)$&quot; opt)]]
+      (System/setProperty k v))
   ;; need to at least pretend to return an exit code
   (try (eval form)
        0
@@ -3273,10 +3315,6 @@ for some of the landmines involved in doing it properly</p>
      (prep project)
      (eval-in project
               `(do ~init
-                   ~(:project-init project)
-                   ~@(let [user-clj (io/file (user/leiningen-home) &quot;user.clj&quot;)]
-                       (if (.exists user-clj)
-                         [(list 'load-file (str user-clj))]))
                    ~@(injected-forms project)
                    (set! ~'*warn-on-reflection*
                          ~(:warn-on-reflection project))
@@ -3285,26 +3323,39 @@ for some of the landmines involved in doing it properly</p>
 </td><td class="codes"><pre class="brush: clojure">(ns leiningen.core.main
   (:require [leiningen.core.user :as user]
             [leiningen.core.project :as project]
+            [leiningen.core.classpath :as classpath]
             [clojure.java.io :as io]
             [clojure.string :as string]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def aliases (atom {&quot;--help&quot; &quot;help&quot;, &quot;-h&quot; &quot;help&quot;, &quot;-?&quot; &quot;help&quot;, &quot;-v&quot; &quot;version&quot;
                     &quot;--version&quot; &quot;version&quot;, &quot;überjar&quot; &quot;uberjar&quot;
                     &quot;cp&quot; &quot;classpath&quot; &quot;halp&quot; &quot;help&quot;
+                    &quot;with-profiles&quot; &quot;with-profile&quot;
                     &quot;readme&quot; [&quot;help&quot; &quot;readme&quot;]
                     &quot;tutorial&quot; [&quot;help&quot; &quot;tutorial&quot;]
-                    &quot;sample&quot; [&quot;help&quot; &quot;sample&quot;]}))</pre></td></tr><tr><td class="docs"><p>Call System/exit. Defined as a function so that rebinding is possible.</p>
+                    &quot;sample&quot; [&quot;help&quot; &quot;sample&quot;]}))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:dynamic *debug* (System/getenv &quot;DEBUG&quot;))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn debug [&amp; args]
+  (when *debug* (apply println args)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:dynamic *info* true)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn info [&amp; args]
+  (when *info* (apply println args)))</pre></td></tr><tr><td class="docs"><p>Bind to false to suppress process termination.</p>
+</td><td class="codes"><pre class="brush: clojure">(def ^:dynamic *exit-process?*
+   true)</pre></td></tr><tr><td class="docs"><p>Exit the process. Rebind <em>exit-process?</em> in order to suppress actual process
+  exits for tools which may want to continue operating.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn exit
   ([code]
-     (shutdown-agents)
-     (System/exit code))
+     (if *exit-process?*
+       (do (shutdown-agents)
+           (System/exit code))
+       (throw (Exception. (str &quot;Suppressed exit: &quot; code)))))
   ([] (exit 0)))</pre></td></tr><tr><td class="docs"><p>Print msg to standard err and exit with a value of 1.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn abort
   [&amp; msg]
   (binding [*out* *err*]
     (apply println msg)
     (exit 1)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn task-not-found [&amp; _]
-  (abort &quot;That's not a task. Use \&quot;lein help\&quot; to list all tasks.&quot;))</pre></td></tr><tr><td class="docs"><p>TODO: got to be a cleaner way to do this, right?</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ^:no-project-needed task-not-found [task &amp; _]
+  (abort (str task &quot; is not a task. Use \&quot;lein help\&quot; to list all tasks.&quot;)))</pre></td></tr><tr><td class="docs"><p>TODO: got to be a cleaner way to do this, right?</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- drop-partial-args [pargs]
   #(for [[f &amp; r] %
          :let [non-varargs (if (pos? (inc (.indexOf (or r []) '&amp;)))
@@ -3318,12 +3369,13 @@ for some of the landmines involved in doing it properly</p>
        (try
          (when-not (find-ns task-ns)
            (require task-ns))
-         (let [task-var (or (ns-resolve task-ns (symbol task)) not-found)]
+         (if-let [task-var (ns-resolve task-ns (symbol task))]
            (with-meta
              (fn [project &amp; args] (apply task-var project (concat pargs args)))
-             (update-in (meta task-var) [:arglists] (drop-partial-args pargs))))
+             (update-in (meta task-var) [:arglists] (drop-partial-args pargs)))
+           (not-found task))
          (catch java.io.FileNotFoundException e
-           not-found))))
+           (not-found task)))))
   ([task] (resolve-task task #'task-not-found)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn ^:internal matching-arity? [task args]
   (some (fn [parameters]
@@ -3356,8 +3408,8 @@ or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class
 </td><td class="codes"><pre class="brush: clojure">(defn- verify-min-version
   [{:keys [min-lein-version]}]
   (when-not (version-satisfies? (System/getenv &quot;LEIN_VERSION&quot;) min-lein-version)
-    (println (format min-version-warning
-                     min-lein-version (System/getenv &quot;LEIN_VERSION&quot;)))))</pre></td></tr><tr><td class="docs">
+    (info (format min-version-warning
+                  min-lein-version (System/getenv &quot;LEIN_VERSION&quot;)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- conj-to-last [coll x]
   (update-in coll [(dec (count coll))] conj x))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn ^:internal group-args
@@ -3374,13 +3426,24 @@ or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class
   (let [project (if (.exists (io/file &quot;project.clj&quot;)) (project/read))]
     (when (:min-lein-version project)
       (verify-min-version project))
+    (when-let [{:keys [host port]} (classpath/get-proxy-settings)]
+      (System/setProperty &quot;http.proxyHost&quot; host)
+      (System/setProperty &quot;http.proxyPort&quot; (str port)))
+    (when-not project
+      (project/load-plugins (project/merge-profiles {} [:user :default])))
     (doseq [[task-name &amp; args] (group-args args)
             :let [task-name (or (@aliases task-name)
                                 (get (:aliases project) task-name)
-                                task-name &quot;help&quot;)
-                  result (apply-task task-name project args)]]
-      (when (and (integer? result) (pos? result))
-        (exit result))))
+                                task-name &quot;help&quot;)]]
+      (try (apply-task task-name project args)
+           (catch Exception e
+             (when-let [[_ code] (and (.getMessage e)
+                                      (re-find #&quot;Process exited with (\d+)&quot;
+                                               (.getMessage e)))]
+               (exit (Integer. code)))
+             (when-not (re-find #&quot;Suppressed exit:&quot; (or (.getMessage e) &quot;&quot;))
+               (.printStackTrace e))
+             (exit 1)))))
   (exit 0))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.core.project" name="leiningen.core.project"><h1 class="project-name">leiningen.core.project</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Read project.clj files.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns leiningen.core.project
   (:refer-clojure :exclude [read])
@@ -3404,9 +3467,10 @@ or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class
 </td><td class="codes"><pre class="brush: clojure">(def defaults {:source-paths [&quot;src&quot;]
                :resource-paths [&quot;resources&quot;]
                :test-paths [&quot;test&quot;]
-               :native-path &quot;native&quot;
+               :native-path &quot;target/native&quot;
                :compile-path &quot;target/classes&quot;
                :target-path &quot;target&quot;
+               :prep-tasks [&quot;javac&quot; &quot;compile&quot;]
                :repositories (ordered/ordered-map
                               &quot;central&quot; {:url &quot;http://repo1.maven.org/maven2&quot;}
                               ;; TODO: point to releases-only before 2.0 is out
@@ -3442,10 +3506,16 @@ or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class
 </td><td class="codes"><pre class="brush: clojure">(defn- dedupe-deps [deps]
   (first (reduce dedupe-step [[] #{}] deps)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- exclude [exclusions deps dep]
-  (let [exclusions-offset (.indexOf dep :exclusions)]
-    (conj deps (if (pos? exclusions-offset)
-                 (update-in dep [(inc exclusions-offset)] into exclusions)
-                 dep))))</pre></td></tr><tr><td class="docs">
+  (conj deps
+        (if (empty? exclusions)
+          dep
+          (let [exclusions-offset (.indexOf dep :exclusions)]
+            (if (pos? exclusions-offset)
+              (update-in dep [(inc exclusions-offset)]
+                         (comp vec distinct (partial into exclusions)))
+              (-&gt; dep
+                  (conj :exclusions)
+                  (conj exclusions)))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- add-exclusions [deps exclusions]
   (reduce (partial exclude exclusions) [] deps))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn normalize-deps [project]
@@ -3455,7 +3525,7 @@ or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class
 </td><td class="codes"><pre class="brush: clojure">(defn normalize-plugins [project]
   (update-in project [:plugins] dedupe-deps))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- absolutize [root path]
-  (str (if (.startsWith path &quot;/&quot;)
+  (str (if (.isAbsolute (io/file path))
          path
          (io/file root path))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- absolutize-path [{:keys [root] :as project} key]
@@ -3475,9 +3545,9 @@ or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class
   (comp normalize-repos normalize-deps absolutize-paths remove-aliases))</pre></td></tr><tr><td class="docs"><p>Profiles get merged into the project map. The :dev and :user
   profiles are active by default.</p>
 </td><td class="codes"><pre class="brush: clojure">(def default-profiles
-  (atom {:default {:resource-paths [&quot;dev-resources&quot;]
-                   :prep-tasks [&quot;javac&quot; &quot;compile&quot;]}
+  (atom {:default {:resource-paths [&quot;dev-resources&quot;]}
          :test {}
+         :offline {:offline? true}
          :debug {:debug true}}))</pre></td></tr><tr><td class="docs"><p>Merge profile values into the project map based on their type.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- profile-key-merge
   [result latter]
@@ -3491,6 +3561,7 @@ or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class
         (set/union latter result)
         (and (coll? result) (coll? latter))
         (concat latter result)
+        (= (class result) (class latter)) latter
         :else (doto latter (println &quot;has a type mismatch merging profiles.&quot;))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn merge-profile [project profile]
   (merge-with profile-key-merge project profile))</pre></td></tr><tr><td class="docs">
@@ -3520,17 +3591,20 @@ or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class
   [project profiles-to-apply]
   (let [merged (reduce merge-profile project
                        (profiles-for project profiles-to-apply))]
-    (with-meta (normalize merged)
-      {:without-profiles (normalize project)})))</pre></td></tr><tr><td class="docs">
+    (vary-meta (normalize merged) merge
+      {:without-profiles (normalize (:without-profiles (meta project) project))
+       :included-profiles (concat (:included-profiles (meta project))
+                                  profiles-to-apply)})))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn ensure-dynamic-classloader []
   (let [thread (Thread/currentThread)
         cl (.getContextClassLoader thread)]
-    (when-not (pomegranate/can-modify? cl)
+    (when-not (pomegranate/modifiable-classloader? cl)
       (.setContextClassLoader thread (DynamicClassLoader. cl)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn load-plugins
-  ([project plugin-key]
-    (ensure-dynamic-classloader)
-    (classpath/resolve-dependencies plugin-key project :add-classpath? true))
+  ([project key]
+     (when (seq (project key))
+       (ensure-dynamic-classloader)
+       (classpath/resolve-dependencies key project :add-classpath? true)))
   ([project] (load-plugins project :plugins)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- load-hooks [project]
   (doseq [n (:hooks project)]
@@ -3548,10 +3622,8 @@ or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class
   user if it is. Plugins should use this rather than altering :dependencies.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn conj-dependency
   [project dependency]
-  (if (some #(= (first %) (first dependency)) (:dependencies project))
-    (do (println &quot;WARNING: Tried to add&quot; dependency &quot;but was already present.&quot;)
-        project)
-    (update-in project [:dependencies] conj dependency)))</pre></td></tr><tr><td class="docs"><p>Read project map out of file, which defaults to project.clj.</p>
+  (println &quot;WARNING: conj-dependencies is deprecated.&quot;)
+  (update-in project [:dependencies] conj dependency))</pre></td></tr><tr><td class="docs"><p>Read project map out of file, which defaults to project.clj.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn read
   ([file profiles]
      (locking read
@@ -3575,23 +3647,14 @@ or by executing \&quot;lein upgrade\&quot;. &quot;)</pre></td></tr><tr><td class
   (:require [clojure.java.io :as io]))</pre></td></tr><tr><td class="docs"><p>Return full path to the user's Leiningen home directory.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn leiningen-home
   []
-  (.getAbsolutePath (doto (if-let [lein-home (System/getenv &quot;LEIN_HOME&quot;)]
-                            (io/file lein-home)
-                            (io/file (or (System/getenv &quot;HOME&quot;)
-                                         (System/getenv &quot;USERPROFILE&quot;)) &quot;.lein&quot;))
-                      .mkdirs)))</pre></td></tr><tr><td class="docs"><p>Load the user's ~/.lein/init.clj file, if present.</p>
+  (.getAbsolutePath (doto (io/file (System/getenv &quot;LEIN_HOME&quot;)) .mkdirs)))</pre></td></tr><tr><td class="docs"><p>Load the user's ~/.lein/init.clj file, if present.</p>
 </td><td class="codes"><pre class="brush: clojure">(def init
   (memoize (fn []
              (let [init-file (io/file (leiningen-home) &quot;init.clj&quot;)]
                (when (.exists init-file)
                  (try (load-file (.getAbsolutePath init-file))
                       (catch Exception e
-                        (.printStackTrace e))))))))</pre></td></tr><tr><td class="docs"><p>Look up the settings map from init.clj or an empty map if it doesn't exist.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn settings
-  []
-  (if-let [settings-var (resolve 'user/settings)]
-    @settings-var
-    {}))</pre></td></tr><tr><td class="docs">
+                        (.printStackTrace e))))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn profiles []
   (let [profiles-file (io/file (leiningen-home) &quot;profiles.clj&quot;)]
     (if (.exists profiles-file)
