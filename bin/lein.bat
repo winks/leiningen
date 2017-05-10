@@ -151,7 +151,7 @@ if "x%HTTP_CLIENT%" == "x" goto TRY_POWERSHELL
     goto EXITRC
 
 :TRY_POWERSHELL
-call powershell -? >nul 2>&1
+call powershell -Command echo "Powershell Found"
 if NOT ERRORLEVEL 0 goto TRY_WGET
     set LAST_HTTP_CLIENT=powershell
     powershell -Command "& {param($a,$f) $client = New-Object System.Net.WebClient;  $client.Proxy.Credentials =[System.Net.CredentialCache]::DefaultNetworkCredentials; $client.DownloadFile($a, $f)}" ""%2"" ""%1""
