@@ -4,7 +4,6 @@
   (:require [clojure.walk :as walk]
             [clojure.java.io :as io]
             [clojure.set :as set]
-            [clojure.string :as s]
             [cemerick.pomegranate :as pomegranate]
             [cemerick.pomegranate.aether :as aether]
             [leiningen.core.utils :as utils]
@@ -467,11 +466,38 @@
   (.toString (BigInteger. 1 (-> (java.security.MessageDigest/getInstance "SHA1")
                                 (.digest (.getBytes content)))) 16))
 
+(defn- keyword-composite-profile? [profile]
+  (and (composite-profile? profile) (every? keyword? profile)))
+
+(defn- ordered-keyword-composite-profiles [project]
+  (->> project meta :profiles
+       (filter (comp keyword-composite-profile? val))
+       (remove (comp empty? val))
+       (sort-by count)
+       (reverse)))
+
+(defn- first-matching-composite [profiles composites]
+  (->> composites
+       (filter (fn [[_ v]] (= v (take (count v) profiles))))
+       (first)))
+
+(defn- normalize-profile-names [project profiles]
+  (let [composites (ordered-keyword-composite-profiles project)]
+    (loop [profiles'  profiles
+           normalized ()]
+      (if (seq profiles')
+        (if-let [[k v] (first-matching-composite profiles' composites)]
+          (recur (drop (count v) profiles') (cons k normalized))
+          (recur (rest profiles') (cons (first profiles') normalized)))
+        (if (= (count profiles) (count normalized))
+          profiles
+          (normalize-profile-names project (reverse normalized)))))))
+
 (defn profile-scope-target-path [project profiles]
   (let [n #(if (map? %) (subs (sha1 (pr-str %)) 0 8) (name %))]
     (if (:target-path project)
       (update-in project [:target-path] format
-                 (s/join "+" (map n (remove #{:default :provided} profiles))))
+                 (str/join "+" (map n (normalize-profile-names project profiles))))
       project)))
 
 (defn target-path-subdirs [{:keys [target-path] :as project} key]

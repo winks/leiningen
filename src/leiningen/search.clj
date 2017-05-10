@@ -1,28 +1,32 @@
 (ns leiningen.search
   "Search Central and Clojars for published artifacts."
   (:require [clojure.string :as string]
-            [leiningen.core.project :as project]
-            [clj-http.client :as http]
-            [cheshire.core :as json]))
+            [clojure.xml :as xml]
+            [leiningen.core.project :as project])
+  (:import (java.net URLEncoder)))
+
+(defn- decruft-central-xml [content]
+  (zipmap (map #(get-in % [:attrs :name]) content)
+          (map #(get-in % [:content 0]) content)))
 
 (defn search-central [query]
-  (let [url (str "https://search.maven.org/solrsearch/select?wt=json&q=" query)]
-    (doseq [result (get-in (json/decode (:body (http/get url)))
-                           ["response" "docs"])]
-      (let [dep (if (= (result "a") (result "g"))
+  (let [url (str "https://search.maven.org/solrsearch/select?wt=xml&q=" query)]
+    (doseq [doc (get-in (xml/parse url) [:content 1 :content])]
+      (let [result (decruft-central-xml (:content doc))
+            dep (if (= (result "a") (result "g"))
                   (result "a")
                   (str (result "g") "/" (result "a")))]
         (println (format "[%s \"%s\"]" dep (result "latestVersion")))))))
 
 (defn search-clojars [query]
-  (let [url (str "https://clojars.org/search?format=json&q=" query)]
-    (doseq [result (get (json/decode (:body (http/get url))) "results")]
-      (let [dep (if (= (result "jar_name") (result "group_name"))
-                  (result "jar_name")
-                  (str (result "group_name") "/" (result "jar_name")))]
-        (println (format "[%s \"%s\"]" dep (result "version")))
-        (when-let [desc (and (not= (string/trim (result "description" "")) "")
-                             (result "description"))]
+  (let [url (str "https://clojars.org/search?format=xml&q=" query)]
+    (doseq [{result :attrs} (:content (xml/parse url))]
+      (let [dep (if (= (result :jar_name) (result :group_name))
+                  (result :jar_name)
+                  (str (result :group_name) "/" (result :jar_name)))]
+        (println (format "[%s \"%s\"]" dep (result :version)))
+        (when-let [desc (and (not= (string/trim (result :description "")) "")
+                             (result :description))]
           (println " " (string/trim (first (string/split desc #"\n")))))))))
 
 (defn ^:no-project-needed search
@@ -34,10 +38,9 @@
                              ["clojars" search-clojars]]]
       (when (repos repo)
         (try (println "Searching" repo "...")
-             (searcher query)
-             (catch clojure.lang.ExceptionInfo e
-               (when-not (re-find #"clj-http" (.getMessage e))
-                 (throw e))
-               (if (= 400 (:status (ex-data e)))
-                 (println "Query syntax unsupported.")
-                 (println "Remote error" (.getMessage e)))))))))
+             (searcher (URLEncoder/encode query "UTF-8"))
+             (catch java.io.IOException e
+               (binding [*out* *err*]
+                 (if (re-find #"HTTP response code: (400|505)" (str e))
+                   (println "Query syntax unsupported.")
+                   (println "Remote error" (.getMessage e))))))))))

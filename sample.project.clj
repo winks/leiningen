@@ -332,17 +332,17 @@
   ;; compilation artifacts for namespaces that come from dependencies.
   :clean-non-project-classes true
   ;; Paths to include on the classpath from each project in the
-  ;; checkouts/ directory. (See the FAQ in the Readme for more details
-  ;; about checkout dependencies.) Set this to be a vector of
-  ;; functions that take the target project as argument. Defaults to
-  ;; [:source-paths :compile-path :resource-paths], but you could use
-  ;; the following to share code from the test suite:
+  ;; checkouts/ directory. (See the tutorial for more details about
+  ;; checkout dependencies.) Set this to be a vector of functions that
+  ;; take the target project as argument. Defaults to [:source-paths
+  ;; :compile-path :resource-paths], but you could use the following
+  ;; to share code from the test suite:
   :checkout-deps-shares [:source-paths :test-paths
                          ~(fn [p] (str (:root p) "/lib/dev/*"))]
 
 ;;; Testing
   ;; Predicates to determine whether to run a test or not, take test metadata
-  ;; as argument. See `lein help tutorial` for more information.
+  ;; as argument. See `lein help test` for more information.
   :test-selectors {:default (fn [m] (not (or (:integration m) (:regression m))))
                    :integration :integration
                    :regression :regression}
@@ -404,7 +404,10 @@
   :omit-source true
   ;; Files with names matching any of these patterns will be excluded from jars.
   :jar-exclusions [#"(?:^|/).svn/"]
-  ;; Same thing, but for uberjars.
+  ;; Files with names matching any of these patterns will included in the jar
+  ;; even if they'd be skipped otherwise.
+  :jar-inclusions [#"^\.ebextensions"]
+  ;; Same as :jar-exclusions, but for uberjars.
   :uberjar-exclusions [#"META-INF/DUMMY.SF"]
   ;; By default Leiningen will run a clean before creating jars to prevent
   ;; undeclared AOT from leaking to downstream consumers; this disables

@@ -7,21 +7,22 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[leiningen-core "2.7.2-SNAPSHOT"]
+                 ;; needed for pom
                  [org.clojure/data.xml "0.0.8"]
-                 [commons-io "2.5"]
-                 [commons-lang "2.6"]
+                 ;; needed for test
                  [bultitude "0.2.8"]
+                 ;; needed for new
                  [stencil "0.5.0" :exclusions [org.clojure/core.cache]]
-                 [reply "0.3.7" :exclusions [ring/ring-core
-                                             org.thnetos/cd-client]]
+                 ;; needed for uberjar
+                 [commons-lang "2.6"]
+                 ;; needed for repl
                  [org.clojure/tools.nrepl "0.2.12"]
-                 [clojure-complete "0.2.4"]
+                 ;; needed for change
+                 [net.cgrand/sjacket "0.1.1" :exclusions [org.clojure/clojure]]
                  ;; bump versions of various common transitive deps
+                 [net.cgrand/parsley "0.9.3" :exclusions [org.clojure/clojure]]
                  [scout "0.1.1"]
-                 [slingshot "0.12.2"]
-                 [cheshire "5.6.3"]
-                 [clj-http "2.0.1"]
-                 [net.cgrand/parsley "0.9.3" :exclusions [org.clojure/clojure]]]
+                 [commons-io "2.5"]]
   ;; checkout-deps don't work with :eval-in :leiningen
   :profiles {:dev {:resource-paths ["leiningen-core/dev-resources"]
                    :test-paths ["leiningen-core/test"]}
@@ -29,12 +30,9 @@
                              leiningen.core.ssl ; lazy-loaded
                              cemerick.pomegranate
                              classlojure.core
-                             clojure.tools.nrepl
-                             clj-http.core]}}
+                             clojure.tools.nrepl]}}
   :test-selectors {:default (complement :disabled)
                    :offline (comp (partial not-any? identity)
                                   (juxt :online :disabled))}
   :source-paths ["leiningen-core/src" "src"]
-  ;; work around Clojure bug http://dev.clojure.org/jira/browse/CLJ-1034
-  :uberjar-exclusions [#"^data_readers.clj$"]
   :eval-in :leiningen)
